@@ -63,6 +63,32 @@ const char* gs_error;
 #include "../src/graphics.h"
 #endif
 
+/*
+ * This next couple routines are basically a drop-in replacement for the uses
+ * of sscanf in this file. It seems that newlib in recent Vita SDKs is shipping
+ * a broken sscanf (possibly the newlib.nano version?) that doesn't like %2hhx.
+ * This is a workaround to get us working with 3.23 but it's not a *good* one.
+ */
+char charhex(char hex_digit) {
+    // This sucks
+    if (hex_digit >= 48 && hex_digit <= 57) {
+        return hex_digit - 48;
+    } else if (hex_digit >= 65 && hex_digit <= 70) {
+        return hex_digit - 55;
+    } else if (hex_digit >= 97 && hex_digit <= 102) {
+        return hex_digit - 87;
+    } else {
+        return 0;
+    }
+}
+
+static void i_hate_everything(char *source, char *whatever, char *dest) {
+    // This sucks too
+    *dest = charhex(source[0]) * 16 + charhex(source[1]);
+}
+
+#define sscanf i_hate_everything
+
 static int mkdirtree(const char* directory) {
   char buffer[1024];
   char* p = buffer;
@@ -447,11 +473,13 @@ int gs_pair(PSERVER_DATA server, char* pin) {
     goto cleanup;
   }
 
+  printf("plaincert ASCII %s\n", result);
   char plaincert[8192];
   for (int count = 0; count < strlen(result); count += 2) {
     sscanf(&result[count], "%2hhx", &plaincert[count / 2]);
   }
   plaincert[strlen(result)/2] = '\0';
+  printf("plaincert %s\n", plaincert);
   printf("%d / %d\n", strlen(result)/2, strlen(plaincert));
 
   unsigned char salt_pin[20];

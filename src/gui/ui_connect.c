@@ -171,7 +171,7 @@ int ui_connect_loop(int id, void *context, const input_data *input) {
         }
         return QUIT_RELOAD;
       }
-      display_error("Pairing failed: %d", ret);
+      display_error("Pairing failed (%s): %d", gs_error, ret);
       return 0;
 
     case CONNECT_DISCONNECT:
@@ -418,7 +418,7 @@ device_info_t* ui_connect_and_pairing(device_info_t *info) {
 
   ret = gs_pair(&server, pin);
   if (ret != GS_OK) {
-    display_error("Pairing failed: %d", ret);
+    display_error("Pairing failed (%s): %d", ret);
     connection_terminate();
     return NULL;
   }
